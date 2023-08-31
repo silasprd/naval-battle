@@ -1,8 +1,7 @@
 class Piece:
-    def __init__(piece, cod, initial_position, extra_positions, direction):
+    def __init__(piece, cod, positions, direction):
         piece.cod = cod
-        piece.initial_position = initial_position
-        piece.extra_positions = extra_positions
+        piece.positions = positions
         piece.direction = direction
 
 def read_input_file(file_name):
@@ -30,32 +29,28 @@ def process_pieces(input_lines):
         if code == '3':
             positions = positions_and_direction[0].split("|")
             for position in positions:
-                piece = Piece(code, position, None, None)
+                all_positions = [position]
+                piece = Piece(code, all_positions, None)
                 pieces.append(piece)
         elif code == '1':
             positions = positions_and_direction[0].split("|")
             for position in positions:
                 direction = position[-1:]
                 initial_position = position[:-1]
-                extra_positions = []
+                all_positions = [initial_position]
                 if direction == 'H':         
                     base_row = initial_position[0]
                     for i in range(1, 4):
                         new_position = base_row + chr(ord(initial_position[1]) + i)
-                        extra_positions.append(new_position)
+                        all_positions.append(new_position)
                 elif direction == 'V':
                     base_col = initial_position[1:]
                     for i in range(1, 4):
                         new_position = chr(ord(initial_position[0]) + i) + base_col
-                        extra_positions.append(new_position)
-                piece = Piece(code, initial_position, extra_positions, direction)
+                        all_positions.append(new_position)
+                piece = Piece(code, all_positions, direction)
                 pieces.append(piece)
-                for piece in pieces:
-                    print(piece.cod, piece.initial_position, piece.extra_positions, piece.direction)
-                
-                # if piece.direction == 'H':
-    # for piece in pieces:
-    #     print(piece.positions)      
+                     
     return pieces
 
 player1_pieces = process_pieces(jogador1_input[0:])
