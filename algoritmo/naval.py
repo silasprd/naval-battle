@@ -12,9 +12,6 @@ def read_input_file(file_name):
 jogador1_input = read_input_file('jogador1.txt')
 jogador2_input = read_input_file('jogador2.txt')
 
-#print(jogador1_input)
-#print(jogador2_input)
-
 def validate_piece_count(piece_count, expected_count, error_message):
     if piece_count != expected_count:
         print(error_message)
@@ -25,28 +22,41 @@ def process_pieces(input_lines):
     for line in input_lines:
         parts = line.strip().split(';')
         code = parts[0]
-        positions_and_direction = parts[1:]
+        positions_and_direction = parts[1].split("|") if len(parts) > 1 else []
         if code == '3':
-            positions = positions_and_direction[0].split("|")
-            for position in positions:
+            for position in positions_and_direction:
                 all_positions = [position]
                 piece = Piece(code, all_positions, None)
                 pieces.append(piece)
-        elif code == '1':
-            positions = positions_and_direction[0].split("|")
-            for position in positions:
+        else:
+            for position in positions_and_direction:
+                nPositions = 0
+                if code == '1':
+                    nPositions = 4
+                elif code == '2':
+                    nPositions = 5
+                elif code == '4':
+                    nPositions = 2
+                elif code == 'T':
+                    break
                 direction = position[-1:]
                 initial_position = position[:-1]
                 all_positions = [initial_position]
                 if direction == 'H':         
-                    base_row = initial_position[0]
-                    for i in range(1, 4):
-                        new_position = base_row + chr(ord(initial_position[1]) + i)
+                    base_row = ord(initial_position[0])
+                    base_col = int(initial_position[1:])
+                    for i in range(1, nPositions):
+                        new_row = base_row
+                        new_col = base_col + i
+                        new_position = chr(new_row) + str(new_col)
                         all_positions.append(new_position)
                 elif direction == 'V':
-                    base_col = initial_position[1:]
-                    for i in range(1, 4):
-                        new_position = chr(ord(initial_position[0]) + i) + base_col
+                    base_row = ord(initial_position[0])
+                    base_col = int(initial_position[1:])
+                    for i in range(1, nPositions):
+                        new_row = base_row + i
+                        new_col = base_col
+                        new_position = chr(new_row) + str(new_col)
                         all_positions.append(new_position)
                 piece = Piece(code, all_positions, direction)
                 pieces.append(piece)
@@ -54,3 +64,10 @@ def process_pieces(input_lines):
     return pieces
 
 player1_pieces = process_pieces(jogador1_input[0:])
+player2_pieces = process_pieces(jogador2_input[0:])
+
+for piece in player1_pieces:
+    print(piece.cod, piece.positions, piece.direction)
+print("--------------------------------------------------------")
+for piece in player1_pieces:
+    print(piece.cod, piece.positions, piece.direction)
