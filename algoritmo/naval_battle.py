@@ -4,6 +4,11 @@ class Piece:
         piece.positions = positions
         piece.direction = direction
 
+class Shot:
+    def __init__(shot, cod, position):
+        shot.cod = cod
+        shot.position = position
+
 def read_input_file(file_name):
     with open(file_name, 'r') as file:
         lines = file.readlines()
@@ -16,6 +21,19 @@ def validate_piece_count(piece_count, expected_count, error_message):
     if piece_count != expected_count:
         print(error_message)
         exit()
+        
+def process_shots(input_lines):
+    shots = []
+    for line in input_lines:
+        parts = line.strip().split(';')
+        code = parts[0]
+        positions_and_direction = parts[1].split("|") if len(parts) > 1 else []
+        if code == 'T':
+            for position in positions_and_direction:
+                positions = [position]
+                shot = Shot(code, position)
+                shots.append(shot)
+    return shots
 
 def process_pieces(input_lines):
     pieces = []  # Cada peça será representada como (code, positions, direction)
@@ -65,9 +83,25 @@ def process_pieces(input_lines):
 
 player1_pieces = process_pieces(jogador1_input[0:])
 player2_pieces = process_pieces(jogador2_input[0:])
+player1_shots = process_shots(jogador1_input[0:])
+player2_shots = process_shots(jogador2_input[0:])
 
+
+print("Player 1 - Shots")
+for shot in player1_shots:
+    print(shot.cod, shot.position)
+
+print("Player 1 - Pieces")
 for piece in player1_pieces:
     print(piece.cod, piece.positions, piece.direction)
+    
 print("--------------------------------------------------------")
+
+print("Player 2 - Shots")
+for shot in player2_shots:
+    print(shot.cod, shot.position)
+
+print("Player 2 - Pieces")
 for piece in player1_pieces:
     print(piece.cod, piece.positions, piece.direction)
+
