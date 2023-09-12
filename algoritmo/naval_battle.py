@@ -86,22 +86,51 @@ player2_pieces = process_pieces(jogador2_input[0:])
 player1_shots = process_shots(jogador1_input[0:])
 player2_shots = process_shots(jogador2_input[0:])
 
-
-print("Player 1 - Shots")
-for shot in player1_shots:
-    print(shot.cod, shot.position)
-
-print("Player 1 - Pieces")
-for piece in player1_pieces:
-    print(piece.cod, piece.positions, piece.direction)
+def proccess_points(player_pieces, opponent_shots):
+    points = 0
+    shots_hits = 0
+    shots_missed = 0
     
-print("--------------------------------------------------------")
+    opponent_positions = set()
+    for piece in player_pieces:
+        opponent_positions.update(piece.positions)
+        
+    for shot in opponent_shots:
+        if shot.position in opponent_positions:
+            # O tiro acertou um navio
+            shots_hits += 1
+            opponent_positions.remove(shot.position)
+            points += 3
 
-print("Player 2 - Shots")
-for shot in player2_shots:
-    print(shot.cod, shot.position)
+    shots_missed = len(opponent_positions)
+    points += shots_hits // 5 * 5
+    
+    return points, shots_hits, shots_missed
 
-print("Player 2 - Pieces")
-for piece in player1_pieces:
-    print(piece.cod, piece.positions, piece.direction)
+player1_points, player1_targets_hit, player1_targets_missed = proccess_points(player1_pieces, player2_shots)
+
+player2_points, player2_targets_hit, player2_targets_missed = proccess_points(player2_pieces, player1_shots)
+
+winner = "J1" if player1_points > player2_points else "J2" if player2_points > player1_points else "EMPATE"
+
+print(winner)
+print(player1_points)
+
+# print("Player 1 - Shots")
+# for shot in player1_shots:
+#     print(shot.cod, shot.position)
+
+# print("Player 1 - Pieces")
+# for piece in player1_pieces:
+#     print(piece.cod, piece.positions, piece.direction)
+    
+# print("--------------------------------------------------------")
+
+# print("Player 2 - Shots")
+# for shot in player2_shots:
+#     print(shot.cod, shot.position)
+
+# print("Player 2 - Pieces")
+# for piece in player1_pieces:
+#     print(piece.cod, piece.positions, piece.direction)
 
