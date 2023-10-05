@@ -94,27 +94,35 @@ def proccess_points(player_pieces, opponent_shots):
     opponent_positions = set()
     for piece in player_pieces:
         opponent_positions.update(piece.positions)
+    
+    # variável utilizada para verificar se a peça acertada é de código 3, para ser adicionado +5 pontos diretamente
+    code_3_positions = {position for piece in player_pieces if piece.cod == '3' for position in piece.positions}
         
     for shot in opponent_shots:
         if shot.position in opponent_positions:
-            # O tiro acertou um navio
+            # Condição para adicionar 5 pontos diretamente se a peça for cod 3
+            # if shot.position in code_3_positions:
+            #     points += 5
+            # else:
+            #     points += 3
+            points += 3               
             shots_hits += 1
             opponent_positions.remove(shot.position)
-            points += 3
 
     shots_missed = len(opponent_positions)
     points += shots_hits // 5 * 5
     
     return points, shots_hits, shots_missed
 
-player1_points, player1_targets_hit, player1_targets_missed = proccess_points(player1_pieces, player2_shots)
+player1_points, player1_targets_hit, player1_targets_missed = proccess_points(player2_pieces, player1_shots)
 
-player2_points, player2_targets_hit, player2_targets_missed = proccess_points(player2_pieces, player1_shots)
+player2_points, player2_targets_hit, player2_targets_missed = proccess_points(player1_pieces, player2_shots)
 
 winner = "J1" if player1_points > player2_points else "J2" if player2_points > player1_points else "EMPATE"
 
-print(winner)
-print(player1_points)
+print("Vencedor: ", winner)
+print("Player 1 points: ", player1_points)
+print("Player 2 points: ", player2_points)
 
 # print("Player 1 - Shots")
 # for shot in player1_shots:
