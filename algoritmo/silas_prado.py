@@ -89,39 +89,36 @@ player2_shots = process_shots(jogador2_input[0:])
 def proccess_points(player_pieces, opponent_shots):
     points = 0
     
-    for shot in opponent_shots:
-        for piece in player_pieces:
-            hits = 0
-            for player_positions in piece.positions:
-                if shot.position in player_positions:
+    for piece in player_pieces:
+        hits = 0
+        last_hit_position = None
+        for player_positions in piece.positions:
+            for shot in opponent_shots:
+                if shot.position == player_positions:
                     hits += 1
-                    points += 3
+                    last_hit_position = shot.position
+        if len(piece.positions) == 1:
+            if hits == 1:
+                points += 5
+        else:
+            if hits == len(piece.positions):
+                for player_positions in piece.positions:
+                    if player_positions == last_hit_position:
+                        points += 5
+                    else: 
+                        points += 3
+            else:
+                points += hits * 3
+    return points
            
 
 
-
-    # for shot in opponent_shots:
-    #     if shot.position in opponent_positions:
-    #         piece_hit = None
-    #         for piece in player_pieces:
-    #             if shot.position in piece.positions:
-    #                 piece_hit = piece
-    #                 break
-    #         points += 3
-    #         if all(position not in opponent_positions for position in piece_hit.positions):
-    #             points += 5 
-    #         shots_hits += 1
-    #         opponent_positions.remove(shot.position)
-
-    # shots_missed = len(opponent_positions)
-    # points += shots_hits // 5 * 5
-    
-    return points
+player2_points = proccess_points(player1_pieces, player2_shots)
+player1_points = proccess_points(player2_pieces, player1_shots)
 
 
-player_points = proccess_points(player1_pieces, player1_shots)
-
-print(player_points)
+print(player2_points)
+print(player1_points)
 
 # player1_points, player1_targets_hit, player1_targets_missed = proccess_points(player2_pieces, player1_shots)
 
