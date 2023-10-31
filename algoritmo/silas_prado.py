@@ -88,6 +88,8 @@ player2_shots = process_shots(jogador2_input[0:])
 
 def proccess_points(player_pieces, opponent_shots):
     points = 0
+    shots_hits = 0
+    shots_missed = 0
     
     for piece in player_pieces:
         hits = 0
@@ -97,9 +99,13 @@ def proccess_points(player_pieces, opponent_shots):
                 if shot.position == player_positions:
                     hits += 1
                     last_hit_position = shot.position
+                    break
         if len(piece.positions) == 1:
             if hits == 1:
                 points += 5
+                shots_hits += 1
+            else: 
+                shots_missed += 1
         else:
             if hits == len(piece.positions):
                 for player_positions in piece.positions:
@@ -107,18 +113,38 @@ def proccess_points(player_pieces, opponent_shots):
                         points += 5
                     else: 
                         points += 3
+                shots_hits += 1
             else:
                 points += hits * 3
-    return points
+                shots_missed += 1
+        
+    return points, shots_hits, shots_missed
            
+player2_points, player2_shots_hit, player2_shots_missed = proccess_points(player1_pieces, player2_shots)
+player1_points, player1_shots_hit, player1_shots_missed = proccess_points(player2_pieces, player1_shots)
+
+def generate_output(winner, shots_hits, shots_missed, points, file_name):
+    output = f"{winner} {shots_hits}AA {shots_missed}AE {points}PT"
+    with open(file_name, 'w') as file:
+        file.write(output)
+
+if player1_points > player2_points:
+    winner = "J1"
+    hits = player1_shots_hit
+    missed = player1_shots_missed
+    points = player1_points
+else:
+    winner = "J2"
+    hits = player2_shots_hit
+    missed = player2_shots_missed
+    points = player2_points
+
+generate_output(winner, hits, missed, points, "resultado.txt")
 
 
-player2_points = proccess_points(player1_pieces, player2_shots)
-player1_points = proccess_points(player2_pieces, player1_shots)
 
-
-print(player2_points)
-print(player1_points)
+# print(player2_points, " ", player2_shots_hit, " ", player2_shots_missed)
+# print(player1_points)
 
 # player1_points, player1_targets_hit, player1_targets_missed = proccess_points(player2_pieces, player1_shots)
 
