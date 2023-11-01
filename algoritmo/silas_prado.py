@@ -22,8 +22,10 @@ def validate_piece_count(piece_count, expected_count, error_message):
         print(error_message)
         exit()
         
-def process_shots(input_lines):
+def process_shots(input_lines, current_player):
     shots = []
+    torpedo_count = 0
+    
     for line in input_lines:
         parts = line.strip().split(';')
         code = parts[0]
@@ -33,21 +35,51 @@ def process_shots(input_lines):
                 positions = [position]
                 shot = Shot(code, position)
                 shots.append(shot)
+                torpedo_count += 1
+    
+    if torpedo_count != 25:
+        error_message = f"{current_player} ERROR_NR_PARTS_VALIDATION"
+        with open("resultado.txt", 'w') as file:
+            file.write(error_message)
+        exit()
+        
     return shots
 
-def process_pieces(input_lines):
+def process_pieces(input_lines, current_player):
     pieces = []  # Cada peça será representada como (code, positions, direction)
+    code_count = {'1': 0, '2': 0, '3': 0, '4': 0}
+    occupied_positions = set()
+    
     for line in input_lines:
+        
         parts = line.strip().split(';')
         code = parts[0]
         positions_and_direction = parts[1].split("|") if len(parts) > 1 else []
+        
         if code == '3':
             for position in positions_and_direction:
+                
+                if position in occupied_positions:
+                    error_message = "ERROR_OVERWRITE_PIECES_VALIDATION"
+                    with open("resultado.txt", 'w') as file:
+                        file.write(error_message)
+                    exit()
+                occupied_positions.add(position)
+                
                 all_positions = [position]
                 piece = Piece(code, all_positions, None)
                 pieces.append(piece)
+                code_count[code] += 1
         else:
             for position in positions_and_direction:
+                
+                if position in occupied_positions:
+                    error_message = f"{current_player} ERROR_OVERWRITE_PIECES_VALIDATION"
+                    with open("resultado.txt", 'w') as file:
+                        file.write(error_message)
+                    exit()
+                occupied_positions.add(position)
+                
                 nPositions = 0
                 if code == '1':
                     nPositions = 4
@@ -78,13 +110,20 @@ def process_pieces(input_lines):
                         all_positions.append(new_position)
                 piece = Piece(code, all_positions, direction)
                 pieces.append(piece)
-                     
+                code_count[code] += 1
+                
+    if code_count['1'] != 5 or code_count['2'] != 2 or code_count['3'] != 10 or code_count['4'] != 5:
+        error_message = f"{current_player} ERROR_NR_PARTS_VALIDATION"
+        with open("resultado.txt", 'w') as file:
+            file.write(error_message)
+        exit() 
+                        
     return pieces
 
-player1_pieces = process_pieces(jogador1_input[0:])
-player2_pieces = process_pieces(jogador2_input[0:])
-player1_shots = process_shots(jogador1_input[0:])
-player2_shots = process_shots(jogador2_input[0:])
+player1_pieces = process_pieces(jogador1_input[0:], "J1")
+player2_pieces = process_pieces(jogador2_input[0:], "J2")
+player1_shots = process_shots(jogador1_input[0:], "J1")
+player2_shots = process_shots(jogador2_input[0:], "J2")
 
 def proccess_points(player_pieces, opponent_shots):
     points = 0
