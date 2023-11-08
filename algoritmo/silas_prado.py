@@ -17,10 +17,38 @@ def read_input_file(file_name):
 jogador1_input = read_input_file('jogador1.txt')
 jogador2_input = read_input_file('jogador2.txt')
 
-def validate_piece_count(piece_count, expected_count, error_message):
-    if piece_count != expected_count:
-        print(error_message)
-        exit()
+
+
+def validate_shot_positions(positions, current_player):
+    for position in positions:
+        if len(position) < 2:
+            return False
+        
+        x = position[1:]
+        y = position[0]
+        
+        if not ('A' <= y <= 'P' and not y.isdigit()) or not (1 <= int(x) <= 15):
+            error_message = f"{current_player} ERROR_POSITION_NONEXISTENT_VALIDATION"
+            with open("resultado.txt", 'w') as file:
+                file.write(error_message)
+            exit() 
+
+def validate_piece_positions(pieces, current_player):
+    for piece in pieces:
+        for position in piece.positions:
+            if len(position) < 2:
+                return False
+
+            x = position[1:]
+            y = position[0]
+
+            if not ('A' <= y <= 'P' and not y.isdigit()) or not (1 <= int(x) <= 15):
+                error_message = f"{current_player} ERROR_POSITION_NONEXISTENT_VALIDATION"
+                with open("resultado.txt", 'w') as file:
+                    file.write(error_message)
+                exit()   
+
+       
         
 def process_shots(input_lines, current_player):
     shots = []
@@ -45,10 +73,26 @@ def process_shots(input_lines, current_player):
         
     return shots
 
+
+
 def process_pieces(input_lines, current_player):
     pieces = []  # Cada peça será representada como (code, positions, direction)
     code_count = {'1': 0, '2': 0, '3': 0, '4': 0}
     occupied_positions = set()
+    
+    def check_no_overlapping_positions(positions, code):
+        for position in positions:
+            # print("|", position, "|")
+            # print("->", occupied_positions, "<-")
+            print("->", code, "<-")
+            if position not in occupied_positions and code != "T":
+                occupied_positions.add(position)
+            else:
+                # print(f"Position {position} is already occupied.")
+                error_message = f"{current_player} ERROR_OVERWRITE_PIECES_VALIDATION"
+                with open("resultado.txt", 'w') as file:
+                    file.write(error_message)
+                exit()
     
     for line in input_lines:
         
@@ -58,26 +102,15 @@ def process_pieces(input_lines, current_player):
         
         if code == '3':
             for position in positions_and_direction:
-                
-                if position in occupied_positions:
-                    error_message = "ERROR_OVERWRITE_PIECES_VALIDATION"
-                    with open("resultado.txt", 'w') as file:
-                        file.write(error_message)
-                    exit()
-                occupied_positions.add(position)
-                
+                # occupied_positions.add(position)
                 all_positions = [position]
+                # check_no_overlapping_positions(all_positions, code)              
                 piece = Piece(code, all_positions, None)
                 pieces.append(piece)
-                code_count[code] += 1
+                code_count[code] += 1           
         else:
             for position in positions_and_direction:
-                
-                if position in occupied_positions:
-                    error_message = f"{current_player} ERROR_OVERWRITE_PIECES_VALIDATION"
-                    with open("resultado.txt", 'w') as file:
-                        file.write(error_message)
-                    exit()
+                # check_no_overlapping_positions([position], code) 
                 occupied_positions.add(position)
                 
                 nPositions = 0
@@ -108,10 +141,11 @@ def process_pieces(input_lines, current_player):
                         new_col = base_col
                         new_position = chr(new_row) + str(new_col)
                         all_positions.append(new_position)
+                # check_no_overlapping_positions(all_positions, code)
                 piece = Piece(code, all_positions, direction)
                 pieces.append(piece)
                 code_count[code] += 1
-                
+                   
     if code_count['1'] != 5 or code_count['2'] != 2 or code_count['3'] != 10 or code_count['4'] != 5:
         error_message = f"{current_player} ERROR_NR_PARTS_VALIDATION"
         with open("resultado.txt", 'w') as file:
@@ -122,8 +156,16 @@ def process_pieces(input_lines, current_player):
 
 player1_pieces = process_pieces(jogador1_input[0:], "J1")
 player2_pieces = process_pieces(jogador2_input[0:], "J2")
+
 player1_shots = process_shots(jogador1_input[0:], "J1")
 player2_shots = process_shots(jogador2_input[0:], "J2")
+
+validate_piece_positions(player1_pieces, "J1")
+validate_piece_positions(player2_pieces, "J2")
+
+validate_shot_positions([shot.position for shot in player1_shots], "J1")
+validate_shot_positions([shot.position for shot in player2_shots], "J2")
+
 
 def proccess_points(player_pieces, opponent_shots):
     points = 0
