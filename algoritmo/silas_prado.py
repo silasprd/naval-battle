@@ -27,7 +27,7 @@ def validate_shot_positions(positions, current_player):
         x = position[1:]
         y = position[0]
         
-        if not ('A' <= y <= 'P' and not y.isdigit()) or not (1 <= int(x) <= 15):
+        if not ('A' <= y <= 'P' and not y.isdigit() and y != 'K') or not (1 <= int(x) <= 15):
             error_message = f"{current_player} ERROR_POSITION_NONEXISTENT_VALIDATION"
             with open("resultado.txt", 'w') as file:
                 file.write(error_message)
@@ -42,12 +42,23 @@ def validate_piece_positions(pieces, current_player):
             x = position[1:]
             y = position[0]
 
-            if not ('A' <= y <= 'P' and not y.isdigit()) or not (1 <= int(x) <= 15):
+            if not ('A' <= y <= 'P' and not y.isdigit() and y != 'K') or not (1 <= int(x) <= 15):
                 error_message = f"{current_player} ERROR_POSITION_NONEXISTENT_VALIDATION"
                 with open("resultado.txt", 'w') as file:
                     file.write(error_message)
                 exit()   
 
+def validate_no_duplicate_piece_positions(pieces, current_player):
+    all_positions = set()
+
+    for piece in pieces:
+        for position in piece.positions:
+            if position in all_positions:
+                error_message = f"{current_player} ERROR_OVERWRITE_PIECES_VALIDATION"
+                with open("resultado.txt", 'w') as file:
+                    file.write(error_message)
+                exit()
+            all_positions.add(position)
        
         
 def process_shots(input_lines, current_player):
@@ -80,20 +91,6 @@ def process_pieces(input_lines, current_player):
     code_count = {'1': 0, '2': 0, '3': 0, '4': 0}
     occupied_positions = set()
     
-    def check_no_overlapping_positions(positions, code):
-        for position in positions:
-            # print("|", position, "|")
-            # print("->", occupied_positions, "<-")
-            print("->", code, "<-")
-            if position not in occupied_positions and code != "T":
-                occupied_positions.add(position)
-            else:
-                # print(f"Position {position} is already occupied.")
-                error_message = f"{current_player} ERROR_OVERWRITE_PIECES_VALIDATION"
-                with open("resultado.txt", 'w') as file:
-                    file.write(error_message)
-                exit()
-    
     for line in input_lines:
         
         parts = line.strip().split(';')
@@ -102,15 +99,12 @@ def process_pieces(input_lines, current_player):
         
         if code == '3':
             for position in positions_and_direction:
-                # occupied_positions.add(position)
                 all_positions = [position]
-                # check_no_overlapping_positions(all_positions, code)              
                 piece = Piece(code, all_positions, None)
                 pieces.append(piece)
                 code_count[code] += 1           
         else:
             for position in positions_and_direction:
-                # check_no_overlapping_positions([position], code) 
                 occupied_positions.add(position)
                 
                 nPositions = 0
@@ -141,7 +135,6 @@ def process_pieces(input_lines, current_player):
                         new_col = base_col
                         new_position = chr(new_row) + str(new_col)
                         all_positions.append(new_position)
-                # check_no_overlapping_positions(all_positions, code)
                 piece = Piece(code, all_positions, direction)
                 pieces.append(piece)
                 code_count[code] += 1
@@ -155,17 +148,16 @@ def process_pieces(input_lines, current_player):
     return pieces
 
 player1_pieces = process_pieces(jogador1_input[0:], "J1")
-player2_pieces = process_pieces(jogador2_input[0:], "J2")
-
 player1_shots = process_shots(jogador1_input[0:], "J1")
-player2_shots = process_shots(jogador2_input[0:], "J2")
-
+validate_no_duplicate_piece_positions(player1_pieces, "J1")
 validate_piece_positions(player1_pieces, "J1")
-validate_piece_positions(player2_pieces, "J2")
-
 validate_shot_positions([shot.position for shot in player1_shots], "J1")
-validate_shot_positions([shot.position for shot in player2_shots], "J2")
 
+player2_pieces = process_pieces(jogador2_input[0:], "J2")
+player2_shots = process_shots(jogador2_input[0:], "J2")
+validate_no_duplicate_piece_positions(player2_pieces, "J2")
+validate_piece_positions(player2_pieces, "J2")
+validate_shot_positions([shot.position for shot in player2_shots], "J2")
 
 def proccess_points(player_pieces, opponent_shots):
     points = 0
@@ -204,63 +196,43 @@ def proccess_points(player_pieces, opponent_shots):
 player2_points, player2_shots_hit, player2_shots_missed = proccess_points(player1_pieces, player2_shots)
 player1_points, player1_shots_hit, player1_shots_missed = proccess_points(player2_pieces, player1_shots)
 
-def generate_output(winner, shots_hits, shots_missed, points, file_name):
-    output = f"{winner} {shots_hits}AA {shots_missed}AE {points}PT"
+def generate_output(players, file_name):
     with open(file_name, 'w') as file:
-        file.write(output)
+        for i, player in enumerate(players):
+            output = f"{player['winner']} {player['hits']}AA {player['missed']}AE {player['points']}PT"
+            file.write(output)
+            if i < len(players) - 1:
+                file.write('\n')
 
 if player1_points > player2_points:
     winner = "J1"
     hits = player1_shots_hit
     missed = player1_shots_missed
     points = player1_points
+    player_data = {'winner': winner, 'hits': hits, 'missed': missed, 'points': points}
 else:
-    winner = "J2"
-    hits = player2_shots_hit
-    missed = player2_shots_missed
-    points = player2_points
+    if player1_points < player2_points:
+        winner = "J2"
+        hits = player2_shots_hit
+        missed = player2_shots_missed
+        points = player2_points
+    else:
+        winner = "J1"
+        hits = player1_shots_hit
+        missed = player1_shots_missed
+        points = player1_points
+        player1_data = {'winner': "J1", 'hits': hits, 'missed': missed, 'points': points}
+        
+        winner = "J2"
+        hits = player2_shots_hit
+        missed = player2_shots_missed
+        points = player2_points
+        player2_data = {'winner': "J2", 'hits': hits, 'missed': missed, 'points': points}       
+        generate_output([player1_data, player2_data], "resultado.txt")
+        exit()
 
-generate_output(winner, hits, missed, points, "resultado.txt")
-
-
-
-# print(player2_points, " ", player2_shots_hit, " ", player2_shots_missed)
-# print(player1_points)
-
-# player1_points, player1_targets_hit, player1_targets_missed = proccess_points(player2_pieces, player1_shots)
-
-# player2_points, player2_targets_hit, player2_targets_missed = proccess_points(player1_pieces, player2_shots)
-
-# winner = "J1" if player1_points > player2_points else "J2" if player2_points > player1_points else "EMPATE"
-
-# print("Vencedor: ", winner)
-# print("Player 1 points: ", player1_points)
-# print("Player 2 points: ", player2_points)
-
-# print("Player 1 - Shots")
-# for shot in player1_shots:
-#     print(shot.cod, shot.position)
-
-# print("Player 1 - Pieces")
-# for piece in player1_pieces:
-#     print(piece.cod, piece.positions, piece.direction)
+player_data = {'winner': winner, 'hits': hits, 'missed': missed, 'points': points}
     
-# print("--------------------------------------------------------")
-
-# print("Player 2 - Shots")
-# for shot in player2_shots:
-#     print(shot.cod, shot.position)
-
-# print("Player 2 - Pieces")
-# for piece in player1_pieces:
-#     print(piece.cod, piece.positions, piece.direction)
-
-# Condição para adicionar 5 pontos diretamente se a peça for cod 3
-        # if shot.position in code_3_positions:
-        #     points += 5
-        # else:
-        #     points += 3
-
-# variável utilizada para verificar se a peça acertada é de código 3, para ser adicionado +5 pontos diretamente
-    # code_3_positions = {position for piece in player_pieces if piece.cod == '3' for position in piece.positions}
-
+generate_output([player_data], "resultado.txt")
+    
+    
